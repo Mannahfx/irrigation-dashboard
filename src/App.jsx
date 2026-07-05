@@ -24,7 +24,7 @@ export default function App() {
         <div className={styles.brand}>
           <div className={styles.logo}>M</div>
           <div>
-            <div className={styles.brandName}>MANNA Agritech</div>
+            <div className={styles.brandName}>REVOSMART</div>
             <div className={styles.brandSub}>Smart Irrigation Dashboard</div>
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function App() {
       </main>
 
       <footer className={styles.footer}>
-        © 2025 MANNA Agritech · broker.hivemq.com
+        © 2026 REVOSMART Integrated Services
       </footer>
     </div>
   )
