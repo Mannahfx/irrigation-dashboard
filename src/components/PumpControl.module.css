@@ -1,0 +1,73 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.title {
+  font-size: 14px; font-weight: 600;
+  color: var(--green); margin-bottom: 20px;
+}
+
+.section { margin-bottom: 20px; }
+.section:last-child { margin-bottom: 0; }
+
+.label {
+  font-size: 11px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+
+.modeRow { display: flex; gap: 8px; }
+
+.modeBtn {
+  flex: 1; padding: 9px 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted); font-size: 12px; font-weight: 600;
+  transition: all .15s;
+}
+.modeBtn:hover:not(:disabled) { color: var(--text); border-color: var(--green-dim); }
+.modeBtnActive { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+.modeBtn:disabled { opacity: .4; cursor: not-allowed; }
+
+.pumpRow { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+
+.pumpIndicator {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px;
+  font-size: 13px; font-weight: 600; border: 1px solid;
+}
+.pumpOn  { background: #0d2e22; color: var(--green); border-color: var(--green-dim); }
+.pumpOff { background: #2a1010; color: var(--red);   border-color: #7f1d1d; }
+
+.pumpDot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: currentColor; animation: p 1.5s infinite;
+}
+@keyframes p { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.autoNote { font-size: 12px; color: var(--muted); }
+
+.btnRow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.pumpBtn {
+  padding: 9px 16px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 600;
+  transition: opacity .15s;
+}
+.pumpBtn:disabled { opacity: .35; cursor: not-allowed; }
+.btnOn     { background: var(--green);    color: #fff; }
+.btnOff    { background: var(--red);      color: #fff; }
+.btnToggle { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+.resetBtn {
+  padding: 8px 14px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 12px;
+  transition: all .15s;
+}
+.resetBtn:hover:not(:disabled) { color: var(--text); }
+.resetBtn:disabled { opacity: .4; cursor: not-allowed; }
