@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { logActivity } from '../lib/activityLogger'
 import styles from './ThresholdControl.module.css'
 
-export default function ThresholdControl({ threshState, publish, connected }) {
+export default function ThresholdControl({ threshState, publish, connected, user, profile }) {
   const [low,  setLow]  = useState('20')
   const [high, setHigh] = useState('60')
   const [err,  setErr]  = useState('')
@@ -16,6 +17,9 @@ export default function ThresholdControl({ threshState, publish, connected }) {
     setErr('')
     publish('manna/threshold/low',  String(lo))
     publish('manna/threshold/high', String(hi))
+    if (user) {
+      logActivity(user.id, user.email, 'THRESHOLD_SET', `Thresholds set: LOW=${lo}%, HIGH=${hi}%`, profile?.device_id)
+    }
   }
 
   return (

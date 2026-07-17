@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
+import { logActivity } from '../lib/activityLogger'
 import styles from './TimerSlots.module.css'
 
 const DEFAULT_SLOTS = Array.from({ length: 15 }, (_, i) => ({
   slot: i + 1, hour: 6, minute: 0, duration: 30, enabled: false
 }))
 
-export default function TimerSlots({ timersJson, publish, connected }) {
+export default function TimerSlots({ timersJson, publish, connected, user, profile }) {
   const [slots, setSlots] = useState(DEFAULT_SLOTS)
   const [saved, setSaved] = useState(null)
 
@@ -35,11 +36,21 @@ export default function TimerSlots({ timersJson, publish, connected }) {
     publish('manna/timers/set', payload)
     setSaved(i)
     setTimeout(() => setSaved(null), 2000)
+    if (user) {
+      logActivity(
+        user.id, user.email, 'TIMER_SET',
+        `Timer slot ${s.slot}: ${String(s.hour).padStart(2,'0')}:${String(s.minute).padStart(2,'0')} for ${s.duration}min (${s.enabled ? 'enabled' : 'disabled'})`,
+        profile?.device_id
+      )
+    }
   }
 
   function clearAll() {
     if (window.confirm('Clear all 15 timer slots?')) {
       publish('manna/timers/clearall', '1')
+      if (user) {
+        logActivity(user.id, user.email, 'TIMER_CLEAR_ALL', 'All 15 timer slots cleared', profile?.device_id)
+      }
     }
   }
 

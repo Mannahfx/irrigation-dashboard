@@ -1,0 +1,96 @@
+/* Feedback bar */
+.feedbackBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.feedbackIcon {
+  color: var(--green);
+  font-size: 14px;
+}
+
+.feedbackText {
+  color: var(--text);
+  flex: 1;
+  font-family: var(--mono);
+}
+
+.feedbackTime {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 0 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tabActive {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+/* Main content */
+.main {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Grid layouts */
+.monitorGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.controlGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .controlGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    padding: 0 8px;
+  }
+
+  .tab {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .main {
+    padding: 12px;
+  }
+}

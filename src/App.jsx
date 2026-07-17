@@ -1,116 +1,104 @@
-import { useState } from 'react'
-import useMqtt from './hooks/useMqtt'
-import SensorCards from './components/SensorCards'
-import PumpControl from './components/PumpControl'
-import ThresholdControl from './components/ThresholdControl'
-import TimerSlots from './components/TimerSlots'
-import RtcSetter from './components/RtcSetter'
-import EventLog from './components/EventLog'
-import AlertBanner from './components/AlertBanner'
-import SensorChart from './components/SensorChart'
+import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from './contexts/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+import LoginPage from './pages/LoginPage'
+import DashboardPage from './pages/DashboardPage'
+import AdminPage from './pages/AdminPage'
 import styles from './App.module.css'
 
-const TABS = ['Monitor', 'Control', 'Timers', 'Log']
-
 export default function App() {
-  const mqtt = useMqtt()
-  const [tab, setTab] = useState('Monitor')
+  const { user, profile, loading, logout, isAdmin } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  async function handleLogout() {
+    await logout()
+    navigate('/login')
+  }
+
+  // Show nothing while checking auth (ProtectedRoute handles its own loading)
+  if (loading) return null
+
+  // Check if we're on the admin page
+  const isOnAdmin = location.pathname === '/admin'
 
   return (
-    <div className={styles.shell}>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
 
-      {/* HEADER */}
-      <header className={styles.header}>
-        <div className={styles.brand}>
-          <div className={styles.logo}>M</div>
-          <div>
-            <div className={styles.brandName}>REVOSMART</div>
-            <div className={styles.brandSub}>Smart Irrigation Dashboard</div>
-          </div>
-        </div>
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <div className={styles.shell}>
+              {/* HEADER */}
+              <header className={styles.header}>
+                <div className={styles.brand}>
+                  <Link to={isAdmin ? '/admin' : '/'} className={styles.logoLink}>
+                    <div className={styles.logo}>R</div>
+                  </Link>
+                  <div>
+                    <div className={styles.brandName}>REVOSMART</div>
+                    <div className={styles.brandSub}>Smart Irrigation Dashboard</div>
+                  </div>
+                </div>
 
-        <div className={styles.headerRight}>
-          {mqtt.currentTime && (
-            <div className={styles.rtcTime}>{mqtt.currentTime}</div>
-          )}
-          <div className={`${styles.badge} ${mqtt.connected ? styles.online : styles.offline}`}>
-            <span className={styles.dot} />
-            {mqtt.connected ? 'Connected' : 'Disconnected'}
-          </div>
-        </div>
-      </header>
+                <div className={styles.headerRight}>
+                  {/* Admin gets both nav buttons */}
+                  {isAdmin && (
+                    <>
+                      {isOnAdmin ? (
+                        <Link to="/" className={styles.navLink}>
+                          🌱 Client Dashboard
+                        </Link>
+                      ) : (
+                        <Link to="/admin" className={styles.adminLink}>
+                          ⚙ Admin Panel
+                        </Link>
+                      )}
+                    </>
+                  )}
 
-      {/* ALERT BANNER */}
-      {mqtt.alerts.length > 0 && (
-        <AlertBanner alerts={mqtt.alerts} />
-      )}
+                  <div className={styles.userArea}>
+                    <div className={`${styles.userAvatar} ${isAdmin ? styles.userAvatarAdmin : ''}`}>
+                      {(profile?.display_name || user?.email || '?')[0].toUpperCase()}
+                    </div>
+                    <div className={styles.userInfo}>
+                      <div className={styles.userName}>
+                        {profile?.display_name || 'User'}
+                      </div>
+                      <div className={`${styles.userRole} ${isAdmin ? styles.userRoleAdmin : ''}`}>
+                        {isAdmin ? 'admin' : 'client'}
+                      </div>
+                    </div>
+                  </div>
 
-      {/* FEEDBACK BAR */}
-      {mqtt.feedback && (
-        <div className={styles.feedbackBar}>
-          <span className={styles.feedbackIcon}>↩</span>
-          <span className={styles.feedbackText}>{mqtt.feedback.msg}</span>
-          <span className={styles.feedbackTime}>{mqtt.feedback.ts}</span>
-        </div>
-      )}
+                  <button className={styles.logoutBtn} onClick={handleLogout}>
+                    Sign out
+                  </button>
+                </div>
+              </header>
 
-      {/* TABS */}
-      <nav className={styles.tabs}>
-        {TABS.map(t => (
-          <button
-            key={t}
-            className={`${styles.tab} ${tab === t ? styles.tabActive : ''}`}
-            onClick={() => setTab(t)}
-          >
-            {t}
-          </button>
-        ))}
-      </nav>
+              {/* ROUTES */}
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
 
-      {/* CONTENT */}
-      <main className={styles.main}>
-
-        {tab === 'Monitor' && (
-          <div className={styles.monitorGrid}>
-            <SensorCards sensors={mqtt.sensors} relayState={mqtt.relayState} mode={mqtt.mode} />
-            <SensorChart tempHistory={mqtt.tempHistory} moistHistory={mqtt.moistHistory} />
-          </div>
-        )}
-
-        {tab === 'Control' && (
-          <div className={styles.controlGrid}>
-            <PumpControl
-              relayState={mqtt.relayState}
-              mode={mqtt.mode}
-              publish={mqtt.publish}
-              connected={mqtt.connected}
-            />
-            <ThresholdControl
-              threshState={mqtt.threshState}
-              publish={mqtt.publish}
-              connected={mqtt.connected}
-            />
-            <RtcSetter publish={mqtt.publish} connected={mqtt.connected} />
-          </div>
-        )}
-
-        {tab === 'Timers' && (
-          <TimerSlots
-            timersJson={mqtt.timersJson}
-            publish={mqtt.publish}
-            connected={mqtt.connected}
-          />
-        )}
-
-        {tab === 'Log' && (
-          <EventLog logs={mqtt.logs} />
-        )}
-
-      </main>
-
-      <footer className={styles.footer}>
-        © 2026 REVOSMART Integrated Services
-      </footer>
-    </div>
+              <footer className={styles.footer}>
+                © 2026 REVOSMART Integrated Services
+              </footer>
+            </div>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   )
 }

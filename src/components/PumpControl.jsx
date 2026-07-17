@@ -1,9 +1,32 @@
+import { logActivity } from '../lib/activityLogger'
 import styles from './PumpControl.module.css'
 
 const MODES = ['MANUAL', 'AUTO', 'TIMER']
 
-export default function PumpControl({ relayState, mode, publish, connected }) {
+export default function PumpControl({ relayState, mode, publish, connected, user, profile }) {
   const isManual = mode === 'MANUAL'
+
+  function changeMode(m) {
+    publish('manna/mode/command', m)
+    if (user) {
+      logActivity(user.id, user.email, 'MODE_CHANGE', `Mode changed to ${m}`, profile?.device_id)
+    }
+  }
+
+  function controlPump(cmd) {
+    publish('manna/relay/command', cmd)
+    if (user) {
+      const action = cmd === 'ON' ? 'PUMP_ON' : cmd === 'OFF' ? 'PUMP_OFF' : 'PUMP_TOGGLE'
+      logActivity(user.id, user.email, action, `Pump ${cmd}`, profile?.device_id)
+    }
+  }
+
+  function resetFlow() {
+    publish('manna/flowreset', '1')
+    if (user) {
+      logActivity(user.id, user.email, 'FLOW_RESET', 'Flow counter reset', profile?.device_id)
+    }
+  }
 
   return (
     <div className={styles.card}>
@@ -17,7 +40,7 @@ export default function PumpControl({ relayState, mode, publish, connected }) {
             <button
               key={m}
               className={`${styles.modeBtn} ${mode === m ? styles.modeBtnActive : ''}`}
-              onClick={() => publish('manna/mode/command', m)}
+              onClick={() => changeMode(m)}
               disabled={!connected}
             >
               {m}
@@ -45,21 +68,21 @@ export default function PumpControl({ relayState, mode, publish, connected }) {
           <div className={styles.btnRow}>
             <button
               className={`${styles.pumpBtn} ${styles.btnOn}`}
-              onClick={() => publish('manna/relay/command', 'ON')}
+              onClick={() => controlPump('ON')}
               disabled={!connected || relayState === 'ON'}
             >
               ▶ Turn ON
             </button>
             <button
               className={`${styles.pumpBtn} ${styles.btnOff}`}
-              onClick={() => publish('manna/relay/command', 'OFF')}
+              onClick={() => controlPump('OFF')}
               disabled={!connected || relayState === 'OFF'}
             >
               ⏹ Turn OFF
             </button>
             <button
               className={`${styles.pumpBtn} ${styles.btnToggle}`}
-              onClick={() => publish('manna/relay/command', 'TOGGLE')}
+              onClick={() => controlPump('TOGGLE')}
               disabled={!connected}
             >
               ⇄ Toggle
@@ -72,7 +95,7 @@ export default function PumpControl({ relayState, mode, publish, connected }) {
       <div className={styles.section}>
         <button
           className={styles.resetBtn}
-          onClick={() => publish('manna/flowreset', '1')}
+          onClick={resetFlow}
           disabled={!connected}
         >
           Reset Flow Counter

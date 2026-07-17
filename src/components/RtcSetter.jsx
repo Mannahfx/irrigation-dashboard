@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { logActivity } from '../lib/activityLogger'
 import styles from './RtcSetter.module.css'
 
-export default function RtcSetter({ publish, connected }) {
+export default function RtcSetter({ publish, connected, user, profile }) {
   const now = new Date()
   const pad = n => String(n).padStart(2, '0')
 
@@ -28,6 +29,9 @@ export default function RtcSetter({ publish, connected }) {
     publish('manna/time/set', payload)
     setSent(true)
     setTimeout(() => setSent(false), 2500)
+    if (user) {
+      logActivity(user.id, user.email, 'RTC_SET', `RTC time set to ${payload}`, profile?.device_id)
+    }
   }
 
   return (
