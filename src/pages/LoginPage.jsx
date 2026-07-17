@@ -33,8 +33,10 @@ export default function LoginPage() {
     setSubmitting(true)
 
     try {
+      const cleanEmail = email.trim()
+
       if (isForgot) {
-        await resetPassword(email)
+        await resetPassword(cleanEmail)
         setMessage('Password reset email sent! Check your inbox.')
         setSubmitting(false)
         return
@@ -57,7 +59,7 @@ export default function LoginPage() {
           return
         }
 
-        await signup(email, password, displayName.trim(), accountType, adminCode)
+        await signup(cleanEmail, password, displayName.trim(), accountType, adminCode)
         setMessage(
           accountType === 'admin'
             ? 'Admin account created! Check your email to verify, then sign in.'
@@ -69,7 +71,7 @@ export default function LoginPage() {
       }
 
       // Login
-      const { user: loggedInUser } = await login(email, password)
+      const { user: loggedInUser } = await login(cleanEmail, password)
 
       // Fetch the profile to determine role for redirect
       // The AuthContext will update profile via onAuthStateChange, but we
