@@ -73,10 +73,16 @@ export default function LoginPage() {
       // Login
       const { user: loggedInUser } = await login(cleanEmail, password)
 
-      // Fetch the profile to determine role for redirect
-      // The AuthContext will update profile via onAuthStateChange, but we
-      // need the role now for navigation. Read from user_metadata as fallback.
-      const role = loggedInUser?.user_metadata?.role || 'client'
+      // Fetch the profile directly from the database to get definitive role
+      let role = 'client'
+      if (loggedInUser) {
+        const { data: prof } = await (await import('../lib/supabase')).default
+          .from('profiles')
+          .select('role')
+          .eq('id', loggedInUser.id)
+          .single()
+        role = prof?.role || loggedInUser?.user_metadata?.role || 'client'
+      }
       navigate(role === 'admin' ? '/admin' : '/')
     } catch (err) {
       const msg = err?.message || 'Something went wrong'
