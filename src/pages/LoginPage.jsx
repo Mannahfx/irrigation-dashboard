@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   // Already logged in — redirect based on role
   if (user && profile) {
@@ -110,12 +111,15 @@ export default function LoginPage() {
     if (mode === 'forgot') {
       setIsForgot(true)
       setIsSignup(false)
+      setShowPassword(false)
     } else if (mode === 'signup') {
       setIsForgot(false)
       setIsSignup(true)
+      setShowPassword(false)
     } else {
       setIsForgot(false)
       setIsSignup(false)
+      setShowPassword(false)
     }
   }
 
@@ -241,15 +245,26 @@ export default function LoginPage() {
           {!isForgot && (
             <div className={styles.field}>
               <label className={styles.label}>Password</label>
-              <input
-                type="password"
-                className={styles.input}
-                placeholder={isSignup ? 'Min 6 characters' : 'Enter your password'}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                autoComplete={isSignup ? 'new-password' : 'current-password'}
-              />
+              <div className={styles.passwordWrapper}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className={styles.input + ' ' + styles.passwordInput}
+                  placeholder={isSignup ? 'Min 6 characters' : 'Enter your password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete={isSignup ? 'new-password' : 'current-password'}
+                />
+                <button
+                  type="button"
+                  className={styles.visibilityToggle}
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex="-1"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? '👁️‍🗨️' : '👁️'}
+                </button>
+              </div>
             </div>
           )}
 
