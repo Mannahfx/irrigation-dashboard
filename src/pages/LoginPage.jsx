@@ -34,7 +34,7 @@ export default function LoginPage() {
     setSubmitting(true)
 
     try {
-      const cleanEmail = email.trim()
+      const cleanEmail = email.trim().toLowerCase()
 
       if (isForgot) {
         await resetPassword(cleanEmail)
