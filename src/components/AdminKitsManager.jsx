@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import supabase from '../lib/supabase'
+import AdminLiveMonitor from './AdminLiveMonitor'
 import styles from './AdminKitsManager.module.css'
 
 export default function AdminKitsManager({ users }) {
@@ -9,6 +10,7 @@ export default function AdminKitsManager({ users }) {
   const [newKitName, setNewKitName] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [viewingKit, setViewingKit] = useState(null)
 
   useEffect(() => {
     fetchKits()
@@ -82,7 +84,17 @@ export default function AdminKitsManager({ users }) {
       alert('Failed to delete kit: ' + error.message)
     } else {
       setKits(kits.filter(k => k.id !== kitId))
+      if (viewingKit?.id === kitId) setViewingKit(null)
     }
+  }
+
+  if (viewingKit) {
+    return (
+      <AdminLiveMonitor 
+        kit={viewingKit} 
+        onBack={() => setViewingKit(null)} 
+      />
+    )
   }
 
   return (
@@ -160,12 +172,20 @@ export default function AdminKitsManager({ users }) {
                       </select>
                     </td>
                     <td>
-                      <button 
-                        className={styles.btnDelete}
-                        onClick={() => handleDeleteKit(kit.id)}
-                      >
-                        Delete
-                      </button>
+                      <div className={styles.actions}>
+                        <button 
+                          className={styles.btnMonitor}
+                          onClick={() => setViewingKit(kit)}
+                        >
+                          Monitor Live
+                        </button>
+                        <button 
+                          className={styles.btnDelete}
+                          onClick={() => handleDeleteKit(kit.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
