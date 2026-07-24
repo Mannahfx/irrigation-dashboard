@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import supabase from '../lib/supabase'
 import AdminUserTable from '../components/AdminUserTable'
 import ActivityFeed from '../components/ActivityFeed'
+import AdminKitsManager from '../components/AdminKitsManager'
 import styles from './AdminPage.module.css'
 
 export default function AdminPage() {
@@ -10,6 +11,8 @@ export default function AdminPage() {
   const [selectedUserId, setSelectedUserId] = useState(null)
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [loadingActivities, setLoadingActivities] = useState(true)
+
+  const [activeTab, setActiveTab] = useState('clients') // 'clients' or 'kits'
 
   // Fetch all user profiles
   useEffect(() => {
@@ -71,59 +74,81 @@ export default function AdminPage() {
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Admin Dashboard</h1>
-        <p className={styles.pageSub}>Monitor all client activities in real time</p>
+        <p className={styles.pageSub}>Monitor all client activities and manage hardware</p>
       </div>
 
-      {/* Stats bar */}
-      <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{users.length}</div>
-          <div className={styles.statLabel}>Total Clients</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{activeToday}</div>
-          <div className={styles.statLabel}>Active Today</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue}>{actionsToday}</div>
-          <div className={styles.statLabel}>Actions Today</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statValue + ' ' + styles.statSmall}>
-            {latestAction
-              ? new Date(latestAction.created_at).toLocaleTimeString()
-              : '—'
-            }
+      {/* Tabs */}
+      <div className={styles.tabs}>
+        <button 
+          className={`${styles.tabBtn} ${activeTab === 'clients' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('clients')}
+        >
+          Clients & Activity
+        </button>
+        <button 
+          className={`${styles.tabBtn} ${activeTab === 'kits' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('kits')}
+        >
+          Smart Kits Management
+        </button>
+      </div>
+
+      {activeTab === 'clients' ? (
+        <>
+          {/* Stats bar */}
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <div className={styles.statValue}>{users.length}</div>
+              <div className={styles.statLabel}>Total Clients</div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statValue}>{activeToday}</div>
+              <div className={styles.statLabel}>Active Today</div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statValue}>{actionsToday}</div>
+              <div className={styles.statLabel}>Actions Today</div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statValue + ' ' + styles.statSmall}>
+                {latestAction
+                  ? new Date(latestAction.created_at).toLocaleTimeString()
+                  : '—'
+                }
+              </div>
+              <div className={styles.statLabel}>Last Activity</div>
+            </div>
           </div>
-          <div className={styles.statLabel}>Last Activity</div>
-        </div>
-      </div>
 
-      {/* Main content */}
-      <div className={styles.grid}>
-        <div className={styles.tableArea}>
-          {loadingUsers ? (
-            <div className={styles.loading}>Loading users...</div>
-          ) : (
-            <AdminUserTable
-              users={users}
-              selectedUserId={selectedUserId}
-              onSelectUser={setSelectedUserId}
-            />
-          )}
-        </div>
+          {/* Main content */}
+          <div className={styles.grid}>
+            <div className={styles.tableArea}>
+              {loadingUsers ? (
+                <div className={styles.loading}>Loading users...</div>
+              ) : (
+                <AdminUserTable
+                  users={users}
+                  selectedUserId={selectedUserId}
+                  onSelectUser={setSelectedUserId}
+                />
+              )}
+            </div>
 
-        <div className={styles.feedArea}>
-          {loadingActivities ? (
-            <div className={styles.loading}>Loading activities...</div>
-          ) : (
-            <ActivityFeed
-              activities={activities}
-              filterUserId={selectedUserId}
-            />
-          )}
-        </div>
-      </div>
+            <div className={styles.feedArea}>
+              {loadingActivities ? (
+                <div className={styles.loading}>Loading activities...</div>
+              ) : (
+                <ActivityFeed
+                  activities={activities}
+                  filterUserId={selectedUserId}
+                />
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <AdminKitsManager users={users} />
+      )}
     </div>
   )
 }

@@ -23,6 +23,39 @@
   margin: 4px 0 0;
 }
 
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.tabBtn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tabBtn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.tabActive {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--green);
+}
+
 /* Stats grid */
 .statsGrid {
   display: grid;
