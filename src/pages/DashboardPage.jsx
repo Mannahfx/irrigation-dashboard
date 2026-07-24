@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import supabase from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import useMqtt from '../hooks/useMqtt'
 import SensorCards from '../components/SensorCards'
@@ -14,12 +15,79 @@ import styles from './DashboardPage.module.css'
 const TABS = ['Monitor', 'Control', 'Timers', 'Log']
 
 export default function DashboardPage() {
-  const mqtt = useMqtt()
   const { user, profile } = useAuth()
   const [tab, setTab] = useState('Monitor')
+  
+  // Kit Management State
+  const [kits, setKits] = useState([])
+  const [selectedKitId, setSelectedKitId] = useState('')
+  const [loadingKits, setLoadingKits] = useState(true)
+
+  useEffect(() => {
+    if (!user?.id) return
+    
+    async function fetchKits() {
+      const { data, error } = await supabase
+        .from('kits')
+        .select('*')
+        .eq('owner_id', user.id)
+      
+      if (data && data.length > 0) {
+        setKits(data)
+        setSelectedKitId(data[0].kit_id)
+      }
+      setLoadingKits(false)
+    }
+    fetchKits()
+  }, [user?.id])
+
+  // Initialize MQTT connection with the selected kit
+  const mqtt = useMqtt(selectedKitId)
+
+  if (loadingKits) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner} />
+        <p>Loading your assigned kits...</p>
+      </div>
+    )
+  }
+
+  if (kits.length === 0) {
+    return (
+      <div className={styles.emptyContainer}>
+        <h2>No Kits Assigned</h2>
+        <p>You haven't been assigned any Smart Irrigation Kits yet.</p>
+        <p>Please contact your administrator to assign a microcontroller to your account.</p>
+      </div>
+    )
+  }
 
   return (
     <>
+      {/* KIT SELECTOR */}
+      <div className={styles.kitSelector}>
+        <label>Active Kit:</label>
+        {kits.length > 1 ? (
+          <select 
+            value={selectedKitId} 
+            onChange={(e) => setSelectedKitId(e.target.value)}
+            className={styles.kitDropdown}
+          >
+            {kits.map(k => (
+              <option key={k.id} value={k.kit_id}>
+                {k.name || k.kit_id} ({k.status})
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className={styles.singleKitName}>
+            {kits[0].name || kits[0].kit_id}
+            <span className={styles.kitBadge}>{kits[0].status}</span>
+          </span>
+        )}
+      </div>
+
       {/* ALERT BANNER */}
       {mqtt.alerts.length > 0 && (
         <AlertBanner alerts={mqtt.alerts} />

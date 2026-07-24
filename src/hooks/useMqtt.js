@@ -1,26 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import mqtt from 'mqtt'
 
-const BROKER   = 'wss://broker.hivemq.com:8884/mqtt'
-const CLIENT_ID = 'MANNA_DASH_' + Math.random().toString(16).slice(2, 8)
+// Allow fallback to the public broker during transition, but prefer Private Broker env vars
+const BROKER = import.meta.env.VITE_MQTT_BROKER || 'wss://broker.hivemq.com:8884/mqtt'
+const USERNAME = import.meta.env.VITE_MQTT_USERNAME || ''
+const PASSWORD = import.meta.env.VITE_MQTT_PASSWORD || ''
 
-const TOPICS = [
-  'manna/sensor/temperature',
-  'manna/sensor/humidity',
-  'manna/sensor/moisture',
-  'manna/sensor/flowrate',
-  'manna/sensor/totalflow',
-  'manna/relay/state',
-  'manna/mode/state',
-  'manna/time/current',
-  'manna/threshold/state',
-  'manna/timers/state',
-  'manna/alert',
-  'manna/log',
-  'manna/feedback',
-]
+const CLIENT_ID = 'REVO_DASH_' + Math.random().toString(16).slice(2, 8)
 
-export default function useMqtt() {
+export default function useMqtt(kitId) {
   const clientRef = useRef(null)
   const [connected, setConnected]   = useState(false)
   const [sensors,   setSensors]     = useState({
@@ -42,12 +30,38 @@ export default function useMqtt() {
   const [moistHistory,setMoistHistory]= useState([])
 
   useEffect(() => {
-    const client = mqtt.connect(BROKER, {
+    // If no kit is selected, don't connect yet
+    if (!kitId) return
+
+    const base = kitId // dynamic topic base, e.g. "REVO-KIT-001"
+    const TOPICS = [
+      `${base}/sensor/temperature`,
+      `${base}/sensor/humidity`,
+      `${base}/sensor/moisture`,
+      `${base}/sensor/flowrate`,
+      `${base}/sensor/totalflow`,
+      `${base}/relay/state`,
+      `${base}/mode/state`,
+      `${base}/time/current`,
+      `${base}/threshold/state`,
+      `${base}/timers/state`,
+      `${base}/alert`,
+      `${base}/log`,
+      `${base}/feedback`,
+    ]
+
+    const options = {
       clientId: CLIENT_ID,
       clean: true,
       reconnectPeriod: 3000,
-    })
+    }
+    
+    if (USERNAME && PASSWORD) {
+      options.username = USERNAME
+      options.password = PASSWORD
+    }
 
+    const client = mqtt.connect(BROKER, options)
     clientRef.current = client
 
     client.on('connect', () => {
@@ -64,52 +78,54 @@ export default function useMqtt() {
       const ts  = new Date().toLocaleTimeString()
 
       switch (topic) {
-        case 'manna/sensor/temperature':
+        case `${base}/sensor/temperature`:
           setSensors(s => ({ ...s, temperature: msg }))
           setTempHistory(h => [...h.slice(-29), { time: ts, value: parseFloat(msg) }])
           break
-        case 'manna/sensor/humidity':
+        case `${base}/sensor/humidity`:
           setSensors(s => ({ ...s, humidity: msg }))
           break
-        case 'manna/sensor/moisture':
+        case `${base}/sensor/moisture`:
           setSensors(s => ({ ...s, moisture: msg }))
           setMoistHistory(h => [...h.slice(-29), { time: ts, value: parseFloat(msg) }])
           break
-        case 'manna/sensor/flowrate':
+        case `${base}/sensor/flowrate`:
           setSensors(s => ({ ...s, flowrate: msg }))
           break
-        case 'manna/sensor/totalflow':
+        case `${base}/sensor/totalflow`:
           setSensors(s => ({ ...s, totalflow: msg }))
           break
-        case 'manna/relay/state':
+        case `${base}/relay/state`:
           setRelayState(msg)
           break
-        case 'manna/mode/state':
+        case `${base}/mode/state`:
           setMode(msg)
           break
-        case 'manna/time/current':
+        case `${base}/time/current`:
           setCurrentTime(msg)
           break
-        case 'manna/threshold/state':
+        case `${base}/threshold/state`:
           setThreshState(msg)
           break
-        case 'manna/timers/state':
+        case `${base}/timers/state`:
           setTimersJson(msg)
           break
-        case 'manna/log':
+        case `${base}/log`:
           setLogs(l => [{ ts, msg }, ...l.slice(0, 99)])
           break
-        case 'manna/alert':
+        case `${base}/alert`:
           setAlerts(a => [{ ts, msg }, ...a.slice(0, 49)])
           break
-        case 'manna/feedback':
+        case `${base}/feedback`:
           setFeedback({ ts, msg })
           break
       }
     })
 
-    return () => client.end()
-  }, [])
+    return () => {
+      client.end()
+    }
+  }, [kitId]) // Reconnect if kitId changes
 
   const publish = useCallback((topic, payload) => {
     if (clientRef.current?.connected) {
